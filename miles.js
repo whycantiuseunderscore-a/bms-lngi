@@ -1,7 +1,7 @@
-function mile_color(c) {
+function mile_color(c,s) {
     var r = ["#fff", "#f99", "#9f9", "#99f", "#ff9", "#f9f", "#9ff", "#999", "#fc0", "#cc0", "#cf0", "#cfc", "#0fc", "#0cf", "#c5f"]
     //return r[(c%1).toString(2).length-1]
-    return "#"+Math.max(16-(c%1).toString(2).length,0).toString(16).repeat(3)
+    return Math.max(16-(c%1).toString(2).length,0).toString(16).repeat(s)
 }
 
 function text_color(c) {
@@ -44,7 +44,9 @@ cM(3 + 1 / 32 + 1 / 1024, "p(W_w^2*W)")
 cM(3 + 1 / 32 + 1 / 512, "p(W_w^w)")
 cM(3 + 1 / 32 + 1 / 256, "p(W_w^W)")
 cM(3 + 1 / 32 + 1 / 128, "p(W_{w+1}) / TFBO")
-cM(3 + 1 / 32 + 1 / 64, "p(W_{w2}")
+cM(3 + 1 / 32 + 1 / 128 + 1 / 512, "p(W_{w+1}^2)")
+cM(3 + 1 / 32 + 1 / 128 + 1/256, "p(W_{w+2})")
+cM(3 + 1 / 32 + 1 / 64, "p(W_{w2})")
 cM(3 + 1 / 16, "p(W_{w^2})")
 cM(3 + 1 / 16 + 1 / 512, "p(W_{w^2}*W)")
 cM(3 + 1 / 16 + 1 / 512 + 1 / 2048, "p(W_{w^2+1})")
@@ -83,7 +85,6 @@ cM(3 + 1 / 16 + 1 / 32 + 1 / 8192 + 1 / 16384 + 1 / 32768, "p(W_{I_w+w^2})")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 8192 + 1 / 16384 + 1 / 32768 + 1/65536, "p(I_{w2})")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 4096, "p(I_{w^2})")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 2048, "p(I(w,0))")
-cM(3 + 1 / 16 + 1 / 32 + 1 / 1024, "p(I(W,0))")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 1024 + 1 / 524288, "p(I(1,0,0))")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 1024 + 1 / 131072, "p(I(1,0,0)*w)")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 1024 + 1 / 65536, "p(I(w,0,0))")
@@ -97,18 +98,24 @@ cM(3 + 1 / 16 + 1 / 32 + 1 / 1024 + 1 / 2048 + 1 / 4096 + 1 / 8192, "p(I_{M+w})"
 cM(3 + 1 / 16 + 1 / 32 + 1 / 1024 + 1 / 2048 + 1 / 4096 + 1 / 8192 + 1 / 16384, "p(I(M,1))?")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 1024 + 1 / 2048 + 1 / 4096 + 1 / 8192 + 1 / 16384 + 1/65536, "p(W_{M_2+1})")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 512, "p(M_w)")
-cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1 / 2048, "p(M(W,0))")
+cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1 / 8192, "p(M_{w^2})")
+cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1 / 8192 + 1 / 16384, "p(M(1,0)-I(w,0))?")
+cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1 / 8192 + 1 / 16384 + 1/32768, "p(M(1,w))")
+cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1/4096, "p(M(w,0))")
+cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1 / 2048+1/(2**20), "p(M(1,0,0))")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1 / 2048 + 1 / 32768, "p(M(1@w))")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1 / 2048 + 1 / 8192, "p(W_{N+1})")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1 / 2048+1/4096, "p(W_{N+w})")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1 / 1024, "p(N_w)")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 512 + 1 / 1024+1/4096+1/16384, "p(W_{[2-2-2-2]+1})")
 cM(3 + 1 / 16 + 1 / 32+1/256, "p((2-)^w) / p(p(T^T^w))")
-cM(3 + 1 / 16 + 1 / 32 + 1 / 128, "p((2-)^W) / p(p(T^T^W))")
+cM(3 + 1 / 16 + 1 / 32 + 1 / 128+1/(2**19), "p((2-)^(1,0)) / p(p(T^T^T)) / p(K)")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 128 + 1 / 2048, "p(K^K^w)")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 128 + 1 / 512, "p(W_{K+1}) / p(p(T^T^T+T))")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 128 + 1 / 256, "p(W_{K+w}) / p(p(T^T^T+T*w))")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 64, "p(K_w)")
+cM(3 + 1 / 16 + 1 / 32 + 1 / 64 + 1 / 1024, "p(1-3-3) / p(p(T^T^T^2*w))?")
+cM(3 + 1 / 16 + 1 / 32 + 1 / 64 + 1/512, "p((3-)^w) / p(p(T^T^T^w))")
 cM(3 + 1 / 16 + 1 / 32 + 1 / 64+1/128, "p(k_w)")
 cM(3 + 1 / 8, "p(psd.&Pi;w-ref.) / p(p(W_{T+1}))")
 cM(3 + 1 / 8 + 1 / 32, "p(>l>a.pW_{>a+2}(W_{>a+2})-stb.)")
@@ -131,13 +138,19 @@ function cM(pos, other_notations) {
 
 function mile_init() {
     for (i = 0; i < milestones.length; i++) {
-        document.getElementById("6").innerHTML = document.getElementById("6").innerHTML + `<div style="background-color: ${mile_color(milestones[i][0])}; color: ${text_color(milestones[i][0])}; width: ${100 + 50 / (1 + (milestones[i][0] % 1).toString(2).length)}%">#${i} | ${milestones[i][2]}<br><span style="font-size: small">${milestones[i][1]}<br><span id="m${i}"></span></span></div><br>`
+        document.getElementById("6").innerHTML = document.getElementById("6").innerHTML + `<div style="color: ${text_color(milestones[i][0])}; width: ${100 + 50 / (1 + (milestones[i][0] % 1).toString(2).length)}%" id="md${i}">#${i} | <b style="font-size: 18px">${milestones[i][2]}</b><br><span style="font-size: small">${milestones[i][1]}<br>Achieved in ${getThen((reverse_enginnering(milestones[i][0]) - Date.now()))} (<span id="m${i}"></span>)</span></div>`
     }
 }
 
 function mile_load() {
-    for (i = 0; i < milestones.length; i++) {
-        document.getElementById(`m${i}`).innerHTML = `${format_time((reverse_enginnering(milestones[i][0]) - Date.now()) / 1000)}<br>Achieved in ${getThen((reverse_enginnering(milestones[i][0]) - Date.now()))}`
+    var j = Math.max(Math.floor(window.scrollY / 100 - 2), 0)
+    for (i = j; i < milestones.length&&i<Math.floor(j+window.innerHeight/100+4); i++) {
+        document.getElementById(`m${i}`).innerHTML = format_time((reverse_enginnering(milestones[i][0]) - Date.now()) / 1000)
+        if (reverse_enginnering(milestones[i][0]) < Date.now()) {
+            document.getElementById(`md${i}`).style["backgroundColor"] = `#00${mile_color(milestones[i][0],2) }00`
+        } else {
+            document.getElementById(`md${i}`).style["backgroundColor"] = `#${mile_color(milestones[i][0],3)}`
+        }
     }
 }
 
