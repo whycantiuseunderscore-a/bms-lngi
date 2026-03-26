@@ -1,6 +1,4 @@
 function mile_color(c,s) {
-    var r = ["#fff", "#f99", "#9f9", "#99f", "#ff9", "#f9f", "#9ff", "#999", "#fc0", "#cc0", "#cf0", "#cfc", "#0fc", "#0cf", "#c5f"]
-    //return r[(c%1).toString(2).length-1]
     return Math.max(16-(c%1).toString(2).length,0).toString(16).repeat(s)
 }
 
@@ -11,7 +9,7 @@ function text_color(c) {
 
 milestones = []
 
-cM(2.875, "p(W_4)      **Remember, less bright = less relevant")
+cM(2.875, "p(W_4)")
 cM(2.875 + 1 / 4096, "p(W_4+W_2)")
 cM(2.875 + 1 / 2048, "p(W_4+W_3)")
 cM(2.875 + 1 / 1024, "p(W_4*2)")
@@ -139,7 +137,7 @@ cM(3 + 1 / 2, "p(>a_w)")
 cM(3 + 1 / 2 + 1 / 4, "p(&beta;_w)")
 cM(3 + 1 / 2 + 1 / 4 + 1 / 8, "p(&gamma;_w)")
 cM(3 + 1 / 2 + 1 / 4 + 1 / 8 + 1 / 16, "p(&delta;_w)")
-cM(4, "p(w-P) = p(pS(&sigma;S*w))")
+cM(4, "p(w-P) = p(pS(&sigma;S*w))") //omg just thanks to googology.top for making ts POSSIBLE
 cM(4 + 1 / 2048, "ψ(ψS(σS*ω)*2)")
 cM(4 + 1 / 512 + 1 / 4096, "ψ(ψS(σS*ω+S))")
 cM(4 + 1 / 512 + 1 / 1024, "ψ(ψS(σS*ω+ψS_2(σS))+ψα_2(ψS(σS*ω)))")

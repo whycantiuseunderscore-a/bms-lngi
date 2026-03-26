@@ -1,5 +1,5 @@
 function summon_droplets() {
-    var t = 300
+    var t = 50
     for (var i = 0; i < t; i++){
         var x = Math.random() * 100
         var ti = Math.random() * 1 + 0.5
@@ -15,7 +15,7 @@ function font_change() {
 }
 
 
-fonts = ["system-ui", "Trispace","Ubuntu","Saira", "Monospace", "Arial", "Wingdings", "Cursive", "Sora","Times New Roman", "Helvetica", "Lucida Console", "Courier New", "Papyrus","Brush Script MT"]
+fonts = ["system-ui", "Trispace","Ubuntu","Saira", "Monospace", "Arial", "Wingdings", "Cursive", "Sora","Helvetica","Papyrus"]
 
 function generate_fonts() {
     for (i = 0; i < fonts.length;i++) {
