@@ -209,7 +209,9 @@ function mile_show() {
     p.style.left = `${(1-p.style.opacity)*-50}%`
     console.log(document.getElementById("main_text").style.left)
     document.getElementById("main_text").style.left = 55 - (1-p.style.opacity) * 47.5 + "%" //55-7.5 = 47.5
-    document.getElementById("main_text").style.width = 37.5 + (1-p.style.opacity) * 47.5 + "%"
+    document.getElementById("main_text").style.width = 37.5 + (1 - p.style.opacity) * 47.5 + "%"
+    document.getElementById("anal").style.left = document.getElementById("main_text").style.left
+    document.getElementById("anal").style.width = document.getElementById("main_text").style.width
 }
 
 function cred_show(c=0) {

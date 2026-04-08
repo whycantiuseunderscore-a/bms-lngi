@@ -5,6 +5,11 @@ else { document.getElementById("font").value = localStorage.getItem("bms-font") 
 const to = 8*-60
 
 
+function cmp_bms(x,y) {
+    //this shit about to work af
+    return x>=y
+}
+
 
 
 function gen_init_bms(x) {
@@ -104,6 +109,13 @@ function update() {
     document.getElementById("1").innerHTML = w[0]
     document.getElementById("3").innerHTML = get_percent(w[1]).toFixed(3) + "%..."+case_closed(w[1])+"s"
     document.getElementById("4").style.width = get_percent(w[1]) * 0.4 + "%"
+    if (w[0] >= "(0,0,0)(1,1,1)(2,2,0)") {
+        document.getElementById("main_text").style.height = "65%"
+        document.getElementById("anal").style.top = "999%"
+    }
+    else {
+        smallUpdate()
+    }
     mile_load()
     fps = 1000/(Date.now()-last_update)
     last_update = Date.now()
@@ -115,10 +127,10 @@ function smallUpdate() {
     document.getElementById("11").innerHTML = cal(lngi(32)[0])
 }
 
+
 fps = 0
 last_update = Date.now()
 setInterval(update, 1, 1)
-setInterval(smallUpdate, 10, 1)
 
 function format_time(t) {
     if (t<0){return format_time(-t) + " ago"}
