@@ -2,7 +2,7 @@
 
 if (null == localStorage.getItem("bms-font")) { document.getElementById("font").value = "system-ui" }
 else { document.getElementById("font").value = localStorage.getItem("bms-font") }
-to = new Date().getTimezoneOffset()
+const to = 8*-60
 
 
 
@@ -118,7 +118,7 @@ function smallUpdate() {
 fps = 0
 last_update = Date.now()
 setInterval(update, 1, 1)
-setInterval(smallUpdate, 10000, 1)
+setInterval(smallUpdate, 10, 1)
 
 function format_time(t) {
     if (t<0){return format_time(-t) + " ago"}
