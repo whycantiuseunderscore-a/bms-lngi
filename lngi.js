@@ -110,9 +110,9 @@ function update() {
         catch (err) {
             for (var t = 31; t != 0; t--){
                 try {
-                    smallUpdate(t); console.log(t); break
+                    smallUpdate(t); break
                 }
-                catch (err){console.log(err)} //wtf?
+                catch (err){} //wtf?
             }
         }
     }
@@ -128,8 +128,8 @@ function smallUpdate(ss) {
 }
 
 
-fps = 0
-last_update = Date.now()
+var fps = 0
+var last_update = Date.now()
 setInterval(update, 10, 1)
 
 function format_time(t) {

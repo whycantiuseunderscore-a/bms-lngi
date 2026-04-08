@@ -331,8 +331,6 @@ function _skipped(M) {
 
 function createTable(X) { return X.map(x => '<tr>' + x.map(y => '<td>' + y + '</td>').join('') + '</tr>').join(''); }
 
-let last = ''
-
 function cal(TT) {
     //if(document.getElementById('input').value==last){return;}
     console.log('a')
