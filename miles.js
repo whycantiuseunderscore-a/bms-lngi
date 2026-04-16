@@ -9,6 +9,8 @@ function text_color(c) {
 
 milestones = []
 
+cM(1, "w")
+cM(2, "e0")
 cM(2.875, "p(W_4)")
 cM(2.875 + 1 / 4096, "p(W_4+W_2)")
 cM(2.875 + 1 / 2048, "p(W_4+W_3)")
@@ -141,6 +143,10 @@ cM(3 + 1 / 4 + 1 / 1024, "p(>l>a.W_{>a+3}-stb.) / p(p(p(X_w)))")
 cM(3 + 1 / 4 + 1 / 512, "p(>l>a.W_{>a+w}-stb.) / lim(SAN) / SDO")
 cM(3 + 1 / 4 + 1 / 256 + 1 / (2 ** 19), "p(>l>a.W_{>a2}-stb.) / Old LDO")
 cM(3 + 1 / 4 + 1 / 64, "p(>l>a.I_{a+1}-stb.)?")
+//this part is placeholder
+for (var j = 3 + 1 / 4 + 1 / 64+1/128; j < 3 + 1 / 2; j = j + 1 / 256){
+    cM(j, "I am not checking the analysis sheet right now")
+}
 cM(3 + 1 / 2, "p(>a_w)")
 cM(3 + 1 / 2 + 1 / 4, "p(&beta;_w)")
 cM(3 + 1 / 2 + 1 / 4 + 1 / 8, "p(&gamma;_w)")

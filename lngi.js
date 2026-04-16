@@ -2,7 +2,6 @@
 
 if (null == localStorage.getItem("bms-font")) { document.getElementById("font").value = "system-ui" }
 else { document.getElementById("font").value = localStorage.getItem("bms-font") }
-const to = 8*-60
 
 
 function cmp_bms(x,y) {
@@ -76,15 +75,33 @@ function lngi(prec=80,x = get_lngi_from_time(Date.now())) {
 
 dt = 1767900000000
 //dt = dt-8640000000
-dt = Date['UTC'](2026, 3, 2) - 86400 * 1000 * 100 + to * 1000 * 60
+dt = Date['UTC'](2026, 3, 2) - 86400 * 1000 * 100 - 8 * 60 * 1000 * 60
 //dt = dt -2225400000
+
+const I = 3 + 1 / 16 + 1 / 64 + 1 / 32768
+const S = 3.125
+
 function get_lngi_from_time(t) {
     var t = t - dt
     t = Math.log10(t / 86400000 + 1) / Math.log10(10) + 1
+    if (t > I) {
+        t = (t / I) ** 0.5 + I - 1
+        if (t > S) {
+            t = (t/S)**18+S-1
+        }
+    }
     return t
 }
 
-function reverse_enginnering(x) { return ((10 ** (x - 1)) - 1) * 86400000 + dt }
+function ch_inv(x,y,z) {
+    return (x + 1 - y) ** (1/z) * y
+}
+
+function reverse_enginnering(x) {
+    if (x < I) { return ((10 ** (x - 1)) - 1) * 86400000 + dt }
+    if (x < S) { return ((10 ** (ch_inv(x,I,0.5) - 1)) - 1) * 86400000 + dt }
+    else { return ((10 ** (ch_inv(ch_inv(x, S, 18), I, 0.5) - 1)) - 1) * 86400000 + dt }
+} 
 
 function get_percent(x) { return Math.min(100, (((get_lngi_from_time(Date.now()) % (2 ** (-x + 1))) * 2 ** (x - 1)) * 100)) }
 
@@ -107,7 +124,7 @@ function update() {
         document.getElementById("anal").style.top = "999%"
     }
     else {
-        for (var t = 48; t != 0; t--){
+        for (var t = 32; t != 0; t--){
                 try {
                     smallUpdate(t); break
                 }

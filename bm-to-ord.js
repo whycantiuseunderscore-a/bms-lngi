@@ -118,12 +118,16 @@ function op(x) { // "does it need parentheses when you write something*x"
     return false;
 }
 
+function lteo(x) {
+    return (/^(p\(0\)\+)*p\(0\)$/.test(x))
+}
+
 // does not handle I(ψ(T^M),1) because it's too complicated
-function display(x) {
+function display(x) { //ah yes Layers
     //if(!y){return 'X'}
     //console.log(x);
     if (x == '0') { return '0'; }
-    if (/^(p\(0\)\+)*p\(0\)$/.test(x)) { return ((x.length + 1) / 5).toString(); }
+    if (lteo(x)) { return ((x.length + 1) / 5).toString(); }
     let f = (x[0] == 'p') ? `p(${sua(arg(x))[0]})` : 'P(0)';
     let g = null;
     let h = null;
@@ -134,8 +138,8 @@ function display(x) {
     //console.log(f,g,h,'',c,d);
     if (c == 'p(0)' && d == '0') {
         if (exp(x) != x) {
-            if (x == 'p(p(0))') { return 'ω'; }
-            if (lt(x, 'p(P(0))')) { return `ω<sup>${display(log(x))}</sup>`; }
+            if (x == 'p(p(0))') { return '<span style="color: #f00">ω</span>'; }
+            if (lt(x, 'p(P(0))')) { return `<span style="color: #f00">ω</span><sup>${display(log(x))}</sup>`; }
             return `${display(f)}<sup>${display(g)}</sup>`
         }
         if (x == 'P(0)') { return 'T'; }
@@ -163,7 +167,7 @@ function display(x) {
             if (s == '') { return `ψ(${display(arg(x))})`; }
             if (l == 'p(0)') { return s.replace('x', '0'); }
             if (s.includes('x')) { return s.replace('x', display(sub(l, 'p(0)'))); }
-            return `${s}<sub>${display(l)}</sub>`;
+            return `<span style='color: hsl(${l.length*6},100%,50%)'>${s}<sub>${display(l)}</sub></span>`;
         }
         return `ψ(${display(arg(x))})`;
     }
