@@ -124,7 +124,7 @@ function update() {
         document.getElementById("anal").style.top = "999%"
     }
     else {
-        for (var t = 32; t != 0; t--){
+        for (var t = 55; t != 0; t--){
                 try {
                     smallUpdate(t); break
                 }
