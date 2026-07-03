@@ -1,381 +1,1062 @@
-function eq(a, b) {
-    if (typeof (a) == 'number') { return a == b; }
-    if (a==undefined){return false}
-    if (a.length == 2) { return eq(a[0], b[0]) && eq(a[1], b[1]); }
-    return eq(a[0], b[0]) && eq(a[1], b[1]) && eq(a[2], b[2]);
-}
+/*
+For pretty printing use cOCF.convert
+*/
 
-// FROM COCF PROGRAM
+class cOCF {
+    // Static class properties
+    static bo = 'Limit';
+    static col = 'c';
+    static format = 1;
+    static mf = false;
+    static ZERO = '';
 
-function paren(x, n) {
-    console.log()
-    let q = x[n] == '(' ? 1 : -1;
-    let i = n;
-    let t = 0;
-    while (1) { t += (x[i] == '(' ? 1 : x[i] == ')' ? -1 : 0); if (!t) { break; }; i += q; }
-    return i;
-}
-
-function firstTerm(x) {
-    console.log()
-    let m = paren(x, 1);
-    return [x.slice(0, m + 1), x.slice(m + 2) || '0'];
-}
-
-function lastTerm(x) {
-    console.log()
-    let m = paren(x, x.length - 1);
-    return [x.slice(0, m - 2) || '0', x.slice(m - 1)];
-}
-
-function terms(x) {
-    console.log()
-    if (x == '0') { return []; }
-    return [firstTerm(x)[0]].concat(terms(firstTerm(x)[1]));
-}
-
-function arg(x) {
-    console.log()
-    return firstTerm(x)[0].slice(2, -1);
-}
-
-function lt(x, y) {
-    console.log()
-    if (y == '0') { return false; }
-    if (x == '0') { return true; }
-    if (x[0] == 'p' && y[0] == 'P') { return true; }
-    if (x[0] == 'P' && y[0] == 'p') { return false; }
-    if (arg(x) != arg(y)) { return lt(arg(x), arg(y)); }
-    return lt(firstTerm(x)[1], firstTerm(y)[1]);
-}
-
-function add(x, y) {
-    if (x == '0') { return y; }
-    if (y == '0') { return x; }
-    if (lt(firstTerm(x)[0], firstTerm(y)[0])) { return y; }
-    let z = firstTerm(x)[0]
-    let w = add(firstTerm(x)[1], y);
-    if (w != '0') { return z + '+' + w; }
-    return z;
-}
-
-function sub(x, y) {
-    if (x == '0') { return '0'; }
-    if (y == '0') { return x; }
-    if (lt(firstTerm(y)[0], firstTerm(x)[0])) { return x; }
-    return sub(firstTerm(x)[1], firstTerm(y)[1]);
-}
-
-function sua(x) { return split(x, 'P(0)'); }
-
-function exp(a) {
-    if (a[0] == 'P') { return `P(${sub(a, 'P(0)')})`; }
-    if (lt(a, 'p(p(P(0)))')) { return `p(${a})`; }
-    let [x, y] = sua(arg(a));
-    let p = split(y, `p(${add(x, 'P(0)')})`)[0];
-    return 'p(' + add(x, add(p, sub(a, 'p(' + add(x, p) + ')'))) + ')';
-}
-
-function log(a) {
-    if (a == '0') { return '0'; }
-    if (a[0] == 'P') { return add('P(0)', arg(a)); }
-    let [x, y] = sua(arg(a));
-    let [p, q] = split(y, `p(${add(x, 'P(0)')})`);
-    if (x == '0' && p == '0') {
-        return q;
-    }
-    let m = add(`p(${add(x, p)})`, q);
-    return m;
-}
-
-function div(a, b) { // only works when b is a.p.
-    if (lt(a, b)) { return '0'; }
-    return add(exp(sub(log(a), log(b))), div(firstTerm(a)[1], b));
-}
-
-function mul(a, b) { // only works when a is a.p.
-    if (b == '0') { return '0'; }
-    return add(exp(add(log(a), log(b))), mul(a, firstTerm(b)[1]))
-}
-
-function split(a, x) {
-    if (a == '0') { return ['0', '0']; }
-    if (lt(a, x)) { return ['0', a]; }
-    if (lt(firstTerm(a)[0], x)) { return ['0', a]; }
-    return [add(firstTerm(a)[0], split(firstTerm(a)[1], x)[0]), split(firstTerm(a)[1], x)[1]];
-}
-
-function op(x) { // "does it need parentheses when you write something*x"
-    if (lt(x, 'p(p(0))')) { return false; }
-    let f = (x[0] == 'p') ? `p(${sua(arg(x))[0]})` : 'P(0)';
-    let g = null;
-    let h = null;
-    if (f == 'p(0)') { f = 'p(p(0))'; g = log(x); h = exp(g); }
-    else { g = div(log(x), f); h = exp(mul(f, g)) }
-    let c = div(x, h);
-    let d = sub(x, mul(h, div(x, h)));
-    if (d != '0') { return true; }
-    return false;
-}
-
-function lteo(x) {
-    return (/^(p\(0\)\+)*p\(0\)$/.test(x))
-}
-
-// does not handle I(ψ(T^M),1) because it's too complicated
-function display(x) { //ah yes Layers
-    //if(!y){return 'X'}
-    //console.log(x);
-    if (x == '0') { return '0'; }
-    if (lteo(x)) { return ((x.length + 1) / 5).toString(); }
-    let f = (x[0] == 'p') ? `p(${sua(arg(x))[0]})` : 'P(0)';
-    let g = null;
-    let h = null;
-    if (f == 'p(0)') { f = 'p(p(0))'; g = log(x); h = firstTerm(x)[0]; }
-    else { g = div(log(x), f); h = `${f == 'P(0)' ? 'P' : 'p'}(${split(arg(x), f)[0]})`; }
-    let c = div(x, h);
-    let d = sub(x, mul(h, div(x, h)));
-    //console.log(f,g,h,'',c,d);
-    if (c == 'p(0)' && d == '0') {
-        if (exp(x) != x) {
-            if (x == 'p(p(0))') { return '<span style="color: #f00">ω</span>'; }
-            if (lt(x, 'p(P(0))')) { return `<span style="color: #f00">ω</span><sup>${display(log(x))}</sup>`; }
-            return `${display(f)}<sup>${display(g)}</sup>`
+    // get position of last symbol p of string st (if l=true then first)
+    static getls(st, p, l = false) {
+        let e = l ? -1 : st.length;
+        let np = 0;
+        while (((!l && e > -1) || (l && e < st.length)) && (np != 0 || st[e] != p)) {
+            l ? e++ : e--;
+            if (st[e] == '[') np--;
+            else if (st[e] == ']') np++;
         }
-        if (x == 'P(0)') { return 'T'; }
-        let m = div(log(lastTerm(arg(x))[1]), 'P(0)');
-        let k = exp(mul('P(0)', div(log(lastTerm(arg(x))[1]), 'P(0)')));
-        k = div(arg(x), k);
-        //console.log(arg(x),k,m)
-        k = sua(k);
-        t = exp(add(mul('P(0)', m), 'P(0)'));
-        let l = null;
-        if (k[0] == '0') { l = '0'; }
-        else { l = 'p(' + mul(exp(mul('P(0)', m)), k[0]) + ')'; }
-        let r = 'p(' + mul(exp(mul('P(0)', m)), add(k[0], 'P(0)')) + ')';
-        let [a, b] = split(k[1], r);
-        a = 'p(' + mul(exp(mul('P(0)', m)), a) + ')'
-        //console.log(k,r,l,a,b)
-        if (a == 'p(0)') { a = '0'; }
-        l = add(l, add(a, b))
-        let s = ''
-        if (lastTerm(arg(x))[1][0] == 'P' && b != '0') {
-            if (m == 'p(0)') { s = 'Ω'; }
-            else if (m == 'p(0)+p(0)') { s = 'I'; }
-            else if (lt(m, 'p(P(P(p(P(P(P(0)))))))')) { s = `I(${display(sub(m, 'p(0)+p(0)'))},x)`; }
-            else if (m == 'P(0)') { s = 'M'; }
-            if (s == '') { return `ψ(${display(arg(x))})`; }
-            if (l == 'p(0)') { return s.replace('x', '0'); }
-            if (s.includes('x')) { return s.replace('x', display(sub(l, 'p(0)'))); }
-            return `<span style='color: hsl(${l.length*6},100%,50%)'>${s}<sub>${display(l)}</sub></span>`;
+        return e;
+    }
+
+    // create [booster]base string
+    static bb(booster, base) {
+        return '[' + booster + ']' + base;
+    }
+
+    // get base of string st
+    static base(st) {
+        return st.slice(this.getls(st, ']', true) + 1);
+    }
+
+    // get booster of string st
+    static booster(st) {
+        return st.slice(1, this.getls(st, ']', true));
+    }
+
+    // get successor of ordinal st
+    static suc(st) {
+        return '[]' + st;
+    }
+
+    // get predecessor of successor ordinal st = X + 1
+    static pred(st) {
+        return st.slice(2);
+    }
+
+    // finite ordinal string st to number
+    static fostn(st) {
+        return st.length / 2;
+    }
+
+    // finite ordinal e from integer to computer format
+    static cf(e) {
+        let s = '';
+        for (let i = 0; i < e; i++)
+            s = this.suc(s);
+        return s;
+    }
+
+    // cmp expressions st1, st2 (if st1<st2 then -1; if st1=st2 then 0; if st1>st2 then 1)
+    static cmp(st1, st2, b = false) {
+        if (b) {
+            let ccnf = this.cmpcnf(this.cnf(st1), this.cnf(st2));
+            let c = st1 == st2 ? 0 : [...st1].reverse() > [...st2].reverse() ? 1 : -1;
+            if (ccnf != c)
+                return ccnf;
+            return c;
         }
-        return `ψ(${display(arg(x))})`;
+        return st1 == st2 ? 0 : [...st1].reverse() > [...st2].reverse() ? 1 : -1;
     }
-    let a = display(h);
-    //console.log(f,h,c,d)
-    if (c != 'p(0)') {
-        if (!op(c)) { a += display(c) }
-        else { a += `&sdot;(${display(c)})`; }
+
+    // delete all boosters of b < b, add a booster
+    static bbc(a, b) {
+        while (b != '' && b != this.col && this.cmp(a, this.booster(b)) == 1)
+            b = this.base(b);
+        return this.bb(a, b);
     }
-    if (d != '0') { a += '+' + display(d); }
-    return a;
-}
 
-// END COCF
-
-function P(M, r, n) {
-    if (r == -1) { return n - 1; }
-    let q = P(M, r - 1, n);
-    while (q > -1 && M[q][r] >= M[n][r]) { q = P(M, r - 1, q); }
-    return q;
-}
-
-function C(M, n) {
-    let X = [];
-    for (let i = 0; i < M.length; i++) {
-        if (P(M, 0, i) == n) { X.push(i); }
+    static rest(l, st) {
+        return this.cmp(l, st) == 1 ? st : this.rest(l, this.booster(st));
     }
-    return X;
-}
 
-function CR(M, n) {
-    let X = [];
-    for (let i = 0; i < M.length; i++) {
-        if (P(M, 0, i) == n) {
-            X.push(i);
-            X = X.concat(CR(M, i));
-        }
+    static ceill(l, st) {
+        return this.cmp(l, st) == 1 ? l : this.bbc(this.ceill(l, this.booster(st)), st);
     }
-    return X;
-}
 
-function D(M, n) {
-    let X = 0;
-    for (let i = 0; i < M.length; i++) {
-        if (P(M, 0, i) == n && M[i][1] > 0) { X++; }
+    static ledge(st) {
+        let x = this.booster(st);
+        return this.cmp(this.col, x) == 1 ? this.col : this.bbc(this.ceill(this.col, x), this.base(st));
     }
-    return X;
-}
 
-function U(M, n) {
-    if (M[n][1] == 0 || M[n][2] == 1 || n + 1 == M.length) { return [0, null]; }
-    let m = P(M, 1, n);
-    let L = [M[m][0] + 1, M[n][1], M[m][2] + 1];
-    if (P(M, 1, n) == P(M, 1, n + 1) && eq(M[n + 1], L)) { return [1, n + 1]; }
-    let q = n;
-    let p = n;
-    while (q != -1) {
-        q = P(M, 0, q);
-        if (P(M, 1, n) == P(M, 1, q) && eq(M[q], L) && M[n + 1][0] > M[q][0]) {
-            if (M[p][2] == 1) { return [2, q] };
-            return [1, q];
-        }
-        p = q;
+    static cascade(x, c, st) {
+        let y = this.booster(c);
+        let d = this.cof(y);
+        let s = d == this.col || d == this.ledge(c) ? this.bb(this.fs(y, this.rest(d, x)), this.base(c)) : this.cascade(y, d, c);
+        return this.bb(this.fs(x, s), this.base(st));
     }
-    return [0, null];
-}
 
-function mv(M, n, k) { // value of upgrader; k is same as in ov
-    if (k) {
-        let A = [k];
-        while (A.at(-1) != n) { // "correct" value of k (justified?)
-            A.push(P(M, 0, A.at(-1)));
-            if (!M[A.at(-1)][0]) { break; } // if this ever gets used something's gone wrong
-        }
-        if (A.includes(n)) {
-            for (i of A.toReversed()) {
-                if (M[i][2] == 0) { k = i; break; }
+    // get cofinality of ordinal st
+    static cof(st) {
+        if (st == this.bo)                         // L
+            return '[[]]';
+        else if (st == '' || st == this.col)            // 1, 6
+            return st;
+        else {
+            let x = this.booster(st);
+            if (x == '')                       // 2
+                return '[]';
+            else {
+                let c = this.cof(x);
+                if (c == '[]')                // 3
+                    return '[[]]';
+                else if (c == '[[]]' || this.cmp(st, c) == 1)       // > C
+                    return c;
+                else {
+                    let l = this.ledge(st);
+                    if (this.cmp(l, c) < 1)
+                        return st;                    // 7
+                    else {
+                        let ca = this.cmp(this.bbc(this.ceill(l, x), this.base(st)), c);
+                        if (ca == 1)   // 4, 5, 8
+                            return c;
+                        else if (ca == 0)
+                            return '[[]]';
+                        else
+                            return this.cof(this.cascade(x, c, st));
+                    }
+                }
             }
         }
     }
-    let S = '0';
-    for (i of C(M, n)) {
-        if (i > k && k) { break; }
-        if (M[i][2] != 1) { continue; }
-        let q = '0';
-        for (j of C(M, i)) {
-            if (j > k && k) { break; }
-            q = add(q, ov(M, j, k));
+
+    static expanlimit(n) {
+        let result = `[${'c'}]`;
+        for (let i = 0; i < n; i++) {
+            result = `[${result}${'c'}]`;
         }
-        S = add(S, exp(q));
+        return '[' + result + ']';
     }
-    let X = C(M, n).filter(x => M[x][2] && C(M, x).length);
-    let p;
-    if (!X.length) { p = 1; }
-    else { p = M[CR(M, X.at(-1)).at(-1)][2]; }
-    if (lt(sua(S)[1], 'p(p(0))') && p && !k) { S = add(S, 'p(0)'); } // 111 211 311 = ψ(T^2·ω), not ψ(T^2)
-    // also, if k!=0, the condition will never be activated, since then it's a fixed point.
-    return exp(S);
-}
 
-function ov(M, n, k) { // k = 3 (31) in 0 111 211 31 2 (-> T, since 31 is chain-upgraded)
-    if (n == k) { return 'P(0)'; }
-    if (M[n][2] == 0) { return o(M, n, k); }
-    let S = '0';
-    for (let i of C(M, n)) {
-        if (i > k && k) { break; }
-        S = add(S, ov(M, i, k));
+    static tostring(n) {
+        return "[".repeat(n) + "]".repeat(n);
     }
-    return `P(${S})`;
-}
 
-function v(M, n, k) { // k is necessary to make the k value persist from ov (maybe? keeping it just in case)
-    // console.log(n,k)
-    if (M[n][1] == 0) { return '0'; }
-    if (M[n][2] == 0) {
-        let u = U(M, n);
-        u = (u[0] ? mv(M, u[1], n * (u[0] == 2)) : 'p(0)');
-        return add(v(M, P(M, 1, n), k), u);
-    }
-    return add(v(M, P(M, 2, n), k), mv(M, n, k));
-}
-
-function o(M, n, k) { // k is necessary to make the k value persist from ov
-    let S = '0';
-    for (let i of C(M, n)) {
-        if (i > k && k) { break; }
-        if (skipped(M, n).includes(i)) { continue; }
-        S = add(S, o(M, i, k));
-    }
-    return `p(${add(mul('P(0)', v(M, n, k)), S)})`;
-}
-
-function skipped(M, n) {
-    let S = [];
-    let u = [...Array(M.length).keys()].map(x => (U(M, x)[0] == 1 ? U(M, x)[1] : null));
-    //let u2=[...Array(M.length).keys()].map(x=>(U(M,x)[0]==2?U(M,x)[1]:null));
-    for (let i of C(M, n)) {
-        S = S.concat(skipped(M, i)); // for display purposes
-        if (M[i][2] && M[n][2]) { S.push(i); continue; }
-        if (u.includes(i)) {
-            let c = C(M, i);
-            if (c.length) { // e.g. 0 111 211 21 111 211
-                let j = c.at(-1);
-                if (eq(M[j], [M[i][0] + 1, M[i][1], 1])) { S.push(i); }
-                else if (eq(U(M, j - 1), [2, i]) && eq(M[j], [M[i][0] + 1, 0, 0]) && !C(M, j).length) { S.push(i); }
+    // get n-th element of fs of ordinal st
+    static fs(st, n) {
+        if (st == "Limit") return this.expanlimit(n);
+        if (typeof n == "number") n = this.tostring(n);
+        if (st == this.bo) {
+            let s = this.col;
+            for (let i = 0; i < this.fostn(n); i++)
+                s = this.bb(s, this.col);
+            for (let i = 0; i < 2; i++)
+                s = this.bb(s, '');
+            return s;
+        }
+        else if (st == '' || st == this.col)     // 1, 6
+            return n;
+        else {
+            let x = this.booster(st);
+            let beta = this.base(st);
+            if (x == '')                         // 2
+                return beta;
+            else {
+                let c = this.cof(x);
+                if (c == '[]') {                    // 3
+                    let s = beta;
+                    x = this.pred(x);
+                    for (let i = 0; i < this.fostn(n); i++)
+                        s = this.bb(x, s);
+                    return s;
+                }
+                else if (c == '[[]]' || this.cmp(st, c) == 1)     // > C
+                    return this.bb(this.fs(x, n), beta);
+                else {
+                    let l = this.ledge(st);
+                    if (this.cmp(l, c) < 1)       // 7
+                        return n;
+                    else {
+                        let ca = this.cmp(this.bbc(this.ceill(l, x), this.base(st)), c);
+                        if (ca == 1)                   // 4, 5, 8
+                            return this.bb(this.fs(x, n), beta);
+                        else if (ca == 0) {              // 9
+                            let s = beta;
+                            for (let i = 0; i < this.fostn(n); i++)
+                                s = this.bb(this.fs(x, s), beta);
+                            return s;
+                        }
+                        else
+                            return this.fs(this.cascade(x, c, st), n);
+                    }
+                }
             }
-            else { S.push(i); continue; }
         }
-        if (eq(M[i], [M[n][0] + 1, 0, 0]) && eq(U(M, i - 1), [2, n]) && !C(M, i).length) { S.push(i); continue; }
     }
-    return S;
-}
 
-function _o(M) {
-    let S = '0';
-    for (let i = 0; i < M.length; i++) { if (eq(M[i], [0, 0, 0])) { S = add(S, o(M, i)); } }
-    return S;
-}
-
-function _skipped(M) {
-    let S = [];
-    for (let i = 0; i < M.length; i++) { if (eq(M[i], [0, 0, 0])) { S = S.concat(skipped(M, i)); } }
-    return S;
-}
-
-function createTable(X) { return X.map(x => '<tr>' + x.map(y => '<td>' + y + '</td>').join('') + '</tr>').join(''); }
-
-function cal(TT) {
-    //if(document.getElementById('input').value==last){return;}
-    console.log('a')
-    let M = TT.replaceAll(' ', '');
-    try { M = eval('[' + M.replaceAll(')(', '],[').replaceAll('(', '[').replaceAll(')', ']') + ']'); }
-    catch (e) { return; }
-    M = M.map(x => { let y = x.slice(); while (y.length < 3) { y.push(0) } return y; });
-    let A = [...Array(M.length).keys()].map(x => D(M, x));
-    if (Math.max(...A) > 70) {
-        return 'Too complex';
-    }
-    return display(_o(M));
-    let Q = '<tr><th class="border">i</th><th class="border" colspan=3>M<sub>i</sub></th><th class="border">o(M,i)</th><th class="border">v(M,i)</th><th class="border">U(M,i)</th><th class="border">Children</th>';
-    let u = [...Array(M.length).keys()].map(x => U(M, x)[1]);
-    let u1 = [...Array(M.length).keys()].filter(x => x != null).map(x => U(M, x)[1] * (-1) ** U(M, x)[0]);
-    let s = _skipped(M);
-    for (let i = 0; i < M.length; i++) {
-        Q += '\n';
-        if (eq(M[i], [0, 0, 0])) { Q += '<tr style="background-color:cyan">'; }
-        else if (u.includes(i)) {
-            let c = C(M, i);
-            if (c.length) {
-                if (eq(M[c.at(-1)], [M[i][0] + 1, M[i][1], 1]) && (!u1.includes(i))) { Q += '<tr style="color:#bbb;background-color:yellow">' }
-                else { Q += '<tr style="background-color:lime">' }
+    static minimize(st) {
+        let s = st;
+        if (st == this.bo)                         // L
+            s = st;
+        else if (st == '' || st == this.col)            // 1, 6
+            s = st;
+        else {
+            let x = this.booster(st);
+            if (x == '')                       // 2
+                s = st;
+            else {
+                let c = this.cof(x);
+                if (c == '[]')                // 3
+                    s = st;
+                else if (c == '[[]]' || this.cmp(st, c) == 1)       // > C
+                    s = st;
+                else {
+                    let l = this.ledge(st);
+                    if (this.cmp(l, c) < 1)
+                        s = st;                    // 7
+                    else {
+                        let ca = this.cmp(this.bbc(this.ceill(l, x), this.base(st)), c);
+                        if (ca == 1)   // 4, 5, 8
+                            s = st;
+                        else if (ca == 0)
+                            s = st;
+                        else {
+                            s = this.cascade(x, c, st);
+                        }
+                    }
+                }
             }
-            else { Q += '<tr style="color:#bbb;background-color:yellow">'; }
         }
-        else if (s.includes(i)) { Q += '<tr style="color:#bbb;">'; }
-        else { Q += '<tr>' }
-        let m = [i.toString(), '(' + M[i][0] + ',', M[i][1] + ',', M[i][2] + ')', display(o(M, i)), display(v(M, i)), (U(M, i)[0] ? U(M, i)[1].toString() + '*'.repeat(U(M, i)[0] - 1) : ''), C(M, i)];
-        for (let j = 0; j < m.length; j++) {
-            if (j == 1 || j == 2 || j == 3) { Q += '<td class="nborder">'; }
-            else { Q += '<td class="border">'; }
-            Q += `${m[j]}</td>`;
-        }
-        Q += '</tr>';
+        return s;
     }
-    Q += `<tr><td>Σ</td><td colspan=7>${display(_o(M))}</td></tr>`;
-    document.getElementById('output2').innerHTML = Q;
-    last = document.getElementById('input').value;
-}
-//document.getElementById('input').value = '(0)(1,1,1)(2,1,1)(3,1,1)(1,1,1)(2,1,1)(3,1)(4,2,1)(5,2,1)(6,2,1)(2,1)(3,2,1)(4,2,1)(5,2,1)';
-//calculate();
 
+    // is st ε number
+    static isepsilon(st) {
+        return st == '' ? false : st == this.col || st == this.bo ? true : this.cmp(st, this.booster(st)) < 1;
+    }
+
+    // largest ε member ≤ CNF st (if st < ε_0 then '')
+    static floorepsilon(st) {
+        if (!Array.isArray(st))
+            return st;
+        let t = st[st.length - 1][0];
+        while (Array.isArray(t) && t != 0) {
+            st = t;
+            t = st[st.length - 1][0];
+        }
+        return t;
+    }
+
+    // is st Ω number
+    static isOmega(st) {
+        return st == '' ? false : st == this.col || st == this.bo ? true : this.cmp(this.col, this.booster(st)) < 1;
+    }
+
+    // remove boosters of st < c
+    static floorOmega(st, c = this.col) {
+        while (st != '' && st != this.col && st != c && this.cmp(c, this.booster(st)) == 1)
+            st = this.base(st);
+        return st;
+    }
+
+    // largest Ω number ≤ CNF st (if st < Ω then '')
+    static floorOmegacnf(st) {
+        if (st == '')
+            return '';
+        let t = this.floorepsilon(st);
+        while (!this.isOmega(t)) {
+            st = t;
+            t = this.floorepsilon(st);
+        }
+        return t;
+    }
+
+    static sepsilon(st, e) {
+        let s = st[st.length - 1];
+        if (s[0] == e)
+            if (s[1] == 1)
+                st.pop();
+            else
+                s[1]--;
+        return st.length ? st : '';
+    }
+
+    static braintail(st, e) {
+        let i = 0, s = [];
+        while (this.floorepsilon([st[i]]) != e)
+            i++;
+        let u = i;
+        while (i < st.length) {
+            s.push([st[i][0] == e ? '' : this.sepsilon(st[i][0], e), st[i][1]]);
+            i++;
+        }
+        let tail = st.slice(0, u);
+        if (!tail.length)
+            tail = '';
+        else if (tail.length == 1 && tail[0][1] == 1 && tail[0][0] != '' && !Array.isArray(tail[0][0]))
+            tail = tail[0][0];
+        return [s, tail];
+    }
+
+    // ω ^ CNF st
+    static omegapower(st) {
+        if (st != '' && !Array.isArray(st))
+            return st;
+        return [[st, 1]];
+    }
+
+    // cmp CNFs st1, st2 (if st1<st2 then -1; if st1=st2 then 0; if st1>st2 then 1)
+    static cmpcnf(st1, st2) {
+        if (st1.toString() == st2.toString())
+            return 0;
+        if (st1 == '')
+            return -1;
+        if (st2 == '')
+            return 1;
+        let b1 = !Array.isArray(st1);
+        let b2 = !Array.isArray(st2);
+        if (b1 && b2)
+            return this.cmp(st1, st2);
+        let c;
+        if (b1) {
+            c = this.cmp(st1, this.floorepsilon(st2));
+            return c == 0 ? -1 : c;
+        }
+        if (b2) {
+            c = this.cmp(this.floorepsilon(st1), st2);
+            return c == 0 ? 1 : c;
+        }
+        let i1 = st1.length - 1;
+        let i2 = st2.length - 1;
+        do {
+            if (st1[0].length == 2 && st2[0].length == 2) {
+                c = this.cmpcnf(st1[i1][0], st2[i2][0]);
+                if (c != 0)
+                    return c;
+                c = st1[i1][1] > st2[i2][1] ? 1 : st1[i1][1] < st2[i2][1] ? -1 : 0;
+            }
+            else {
+                c = this.cmp(st1[i1][0], st2[i2][0]);
+                if (c != 0)
+                    return c;
+                c = this.cmpcnf(st1[i1][1], st2[i2][1]);
+                if (c != 0)
+                    return c;
+                c = this.cmpcnf(st1[i1][2], st2[i2][2]);
+            }
+            if (c != 0)
+                return c;
+            i1--;
+            i2--;
+        }
+        while (i1 >= 0 && i2 >= 0);
+        if (i1 < 0)
+            return -1;
+        return 1;
+    }
+
+    // CNF st1 + CNF st2 
+    static sumcnf(st1, st2) {
+        if (st1 == '')
+            return st2;
+        if (st2 == '')
+            return st1;
+        let z1, z2;
+        if (!Array.isArray(st1)) {
+            z1 = st1;
+            st1 = [[st1, 1]];
+        }
+        if (!Array.isArray(st2)) {
+            z2 = st2;
+            st2 = [[st2, 1]];
+        }
+        let b1 = st1[0].length == 2;
+        let b2 = st2[0].length == 2;
+        if (b1 ^ b2) {
+            if (b1)
+                st1 = [[z1 === undefined ? this.floorepsilon(st1) : z1, '', st1]];
+            else
+                st2 = [[z2 === undefined ? this.floorepsilon(st2) : z2, '', st2]];
+        }
+        let s = st2.slice(-1);
+        let i = 0;
+        if (b1 && b2) {
+            let c = this.cmpcnf(s[0][0], st1[i][0]);
+            while (c > 0) {
+                i++;
+                if (i < st1.length)
+                    c = this.cmpcnf(s[0][0], st1[i][0]);
+                else
+                    break;
+            }
+            if (i == st1.length)
+                return st2;
+            if (c == 0) {
+                st1[i][1] += s[0][1];
+                st2.pop();
+            }
+        }
+        else {
+            let c0 = this.cmp(s[0][0], st1[i][0]);
+            let c1 = this.cmpcnf(s[0][1], st1[i][1]);
+            while (c0 > 0 || (c0 == 0 && c1 > 0)) {
+                i++;
+                if (i < st1.length) {
+                    c0 = this.cmp(s[0][0], st1[i][0]);
+                    c1 = this.cmpcnf(s[0][1], st1[i][1]);
+                }
+                else
+                    break;
+            }
+            if (i == st1.length)
+                return st2;
+            if (c0 == 0 && c1 == 0) {
+                st1[i][2] = this.sumcnf(st1[i][2], s[0][2]);
+                st2.pop();
+            }
+        }
+        return st2.concat(st1.slice(i));
+    }
+
+    // get CNF of st
+    static cnf(st, ext = false, b = true) {
+        if (!Array.isArray(st) && (st == '' || this.isepsilon(st)))
+            return st;
+        let c = [];
+        if (ext) {
+            if (!Array.isArray(st))
+                st = this.cnf(st);
+            if (this.floorepsilon(st) == '')
+                return st;
+            let s, t, i = -1, e, brain, m, h;
+            for (s of st) {
+                h = false;
+                e = this.floorepsilon([s]);
+                if (e == '') {
+                    brain = '';
+                    m = s;
+                }
+                else if (s[0] == e) {
+                    brain = '';
+                    m = ['', s[1]];
+                }
+                else {
+                    [brain, t] = this.braintail(s[0], e);
+                    if (brain.length == 1 && !brain[0][0].length && brain[0][1] == 1)
+                        brain = '';
+                    m = [t, s[1]];
+                    h = t != '' && s[1] == 1 && !Array.isArray(t);
+                }
+                if (i < 0 || c[i][0] != e || c[i][1].toString() != brain.toString()) {
+                    c.push([e, brain, h ? t : [m]]);
+                    i++;
+                }
+                else {
+                    if (!Array.isArray(c[i][2]))
+                        c[i][2] = [[c[i][2], 1]];
+                    c[i][2].push(m);
+                }
+            }
+            if (b)
+                for (s of c) {
+                    s[1] = this.cnf(s[1], true);
+                    s[2] = this.cnf(s[2], true);
+                }
+        }
+        else {
+            let s, t, i = -1;
+            while (st) {
+                [s, st] = this.isepsilon(st) ? [st, ''] : [this.booster(st), this.base(st)];
+                if (c.length == 0 || this.cmp(t, s) < 1) {
+                    if (i < 0 || c[i][0] != s) {
+                        c.push([s, 1]);
+                        i++;
+                    }
+                    else
+                        c[i][1]++;
+                    t = s;
+                }
+            }
+            for (s of c)
+                s[0] = this.cnf(s[0]);
+        }
+        return c;
+    }
+
+    static unone(st) {
+        return st == '1' ? '' : st;
+    }
+
+    static displayform(st, ext = false) {
+        if (st == '')
+            return 0;
+        if (!Array.isArray(st))
+            return this.convertepsilon(st, ext);
+        if (ext) {
+            if (st[0].length == 2)
+                return this.displayform(st);
+            let i = st.length - 1;
+            let s = '';
+            let e, ex, m;
+            while (i >= 0) {
+                s += ' + ';
+                e = st[i][0];
+                if (e == '')
+                    s += this.displayform(st[i][2]);
+                else {
+                    s += this.convertepsilon(e, true);
+                    ex = st[i][1];
+                    m = this.displayform(st[i][2], true);
+                    if (Array.isArray(st[i][2]) && st[i][2].length > 1)
+                        m = '(' + m + ')';
+                    else
+                        m = this.unone(m);
+                    if (ex != '')
+                        s += '<sup>' + this.displayform(ex, true) + '</sup>';
+                    else if (m && (s[s.length - 1] == ']' || m[0] == '['))
+                        s += '·';
+                    s += m;
+                }
+                i--;
+            }
+            return s.slice(3);
+        }
+        else {
+            let i = st.length - 1;
+            let s = '';
+            let ex;
+            while (i >= 0) {
+                s += ' + ';
+                ex = st[i][0];
+                if (Array.isArray(ex)) {
+                    s += 'ω';
+                    if (ex.length != 1 || ex[0][0] != 0 || ex[0][1] != 1)
+                        s += '<sup>' + this.displayform(ex) + '</sup>';
+                    s += this.unone(st[i][1]);
+                }
+                else if (ex == '')
+                    s += st[i][1];
+                else {
+                    s += this.convertepsilon(ex);
+                    if (st[i][1] != '1') {
+                        if (s[s.length - 1] == ']')
+                            s += '·';
+                        s += st[i][1];
+                    }
+                }
+                i--;
+            }
+            return s.slice(3);
+        }
+    }
+
+    static getle(cf, x, ex, b) {
+        let le = '';
+        if (b) {
+            let u = 0;
+            while (this.cmpcnf(cf, [ex[u]]) > 0)
+                u++;
+            if (u > 0)
+                le = ex.slice(0, u);
+        }
+        if (le.length == 1 && le[0][1] == 1 && le[0][0] != '' && !Array.isArray(le[0][0]))
+            return le[0][0];
+        else
+            return this.omegapower(le);
+    }
+
+    static convertepsilon(st, ext = false) {
+        if (st == this.col || st == this.bo)
+            return st;
+        if (st == '[[[[c]c]]c]')
+            return 'I';
+        if (st == '[[[c][[c]c]]c]')
+            return 'M';
+        
+        let x = this.booster(st);
+        let beta = this.base(st);
+
+        let f = this.floorOmega(x);
+        let j = f;
+        let sy = '';
+        if (f == this.col) {
+            sy = 'Ω';
+            j = this.bb(this.col, this.col);
+            j = this.bb(j, this.floorOmega(beta, j));
+            j = this.bb(j, this.col);
+            j = this.bb(j, this.floorOmega(beta, j));
+        }
+        else if (f == this.bb(this.col, this.col)) {
+            sy = 'L';
+            j = this.bb(this.col, this.col);
+            j = this.bb(this.col, j);
+            j = this.bb(j, this.floorOmega(beta, j));
+            j = this.bb(j, this.col);
+            j = this.bb(j, this.floorOmega(beta, j));
+        }
+        else if (f == this.bb(this.col, this.bb(this.col, this.col))) {
+            sy = 'R';
+            j = this.bb(this.col, this.col);
+            j = this.bb(this.col, j);
+            j = this.bb(this.col, j);
+            j = this.bb(j, this.floorOmega(beta, j));
+            j = this.bb(j, this.col);
+            j = this.bb(j, this.floorOmega(beta, j));
+        }
+        else {
+            if (f == this.bb(this.col, this.floorOmega(beta)))
+                sy = 'φ';
+        }
+        if (sy != '' && this.cmp(this.bb(this.bb(this.bb('', f), f), f), x) > 0 && (sy != 'Ω' || this.cmp(this.bb(j, this.col), x) == 1)) {
+            let cf = this.cnf(f);
+            let fx = this.floorOmega(x, f);
+            let ex = this.cnf(x);
+            let eex = this.cnf(ex, true, false);
+            let le = this.getle(cf, x, ex, x != f && eex[0][0] != f);
+            while (beta) {
+                let x1 = this.booster(beta);
+                let fx1 = this.floorOmega(x1, j);
+                if (fx1 == fx) {
+                    let ex1 = this.cnf(x1);
+                    le = this.sumcnf(this.getle(cf, x1, ex1, x1 != j && this.cnf(ex1, true, false)[0][0] != j), le);
+                    beta = this.base(beta);
+                }
+                else {
+                    if (fx == f)
+                        le = this.sumcnf(beta, le);
+                    else {
+                        let u = eex.length - 1;
+                        while (u >= 0 && eex[u][0] == f)
+                            u--;
+                        u++;
+                        let ca = this.cmpcnf(eex[u][2], this.cnf(beta));
+                        le = this.sumcnf(ca == 1 ? '' : ca == 0 ? [['', 1]] : beta, le);
+                    }
+                    break;
+                }
+            }
+            if (sy != 'φ' && le.length == 1 && le[0][1] == 1 && le[0][0] == '')
+                le = '';
+            else {
+                if (ext)
+                    le = this.cnf(le, true);
+                le = this.displayform(le, ext);
+                if (sy == 'φ' && isFinite(le))
+                    le--;
+            }
+            if (sy == 'φ') {
+                if (fx == f)
+                    return 'ε<sub>' + le + '</sub>';
+                if (fx == this.bb(f, f))
+                    return 'ζ<sub>' + le + '</sub>';
+                if (fx == this.bb(f, this.bb(f, f)))
+                    return 'η<sub>' + le + '</sub>';
+                if (fx == this.bb(this.bb(f, f), f))
+                    return 'Γ<sub>' + le + '</sub>';
+            }
+            if (sy != 'φ' || fx == f)
+                return sy + (le == '' ? '' : '<sub>' + le + '</sub>');
+            let s = '';
+            let i = eex.length - 1;
+            let p = eex[i][1];
+            let m = eex[i][2];
+            p = p == '' ? 1 : p[0][1];
+            let q = p;
+            while (q > 0) {
+                s += ', ';
+                if (q == p) {
+                    i--;
+                    if (ext)
+                        m = this.cnf(m, true);
+                    s += this.displayform(m, ext);
+                    if (i >= 0) {
+                        p = eex[i][1];
+                        m = eex[i][2];
+                        p = eex[i][0] != f ? 0 : p == '' ? 1 : p[0][1];
+                    }
+                }
+                else
+                    s += 0;
+                q--;
+            }
+            return sy + '(' + s.slice(2) + ', ' + le + ')';
+        }
+        return this.bb(this.displayform(this.cnf(x, ext), ext), beta == '' ? '' : (this.displayform(this.cnf(beta, ext), ext)));
+    }
+
+    static convert(st) {
+        let d = this.format > 1 ? st : this.displayform(this.cnf(st, this.format), this.format);
+        if (this.mf) {
+            let s = this.minimize(st);
+            while (s != st) {
+                d = d + ' = ' + (this.format > 1 ? s : this.displayform(this.cnf(s, this.format), this.format));
+                st = s;
+                s = this.minimize(st);
+            }
+        }
+        return d;
+    }
+
+    static isSuccessor(ord) {
+        if (ord == "Limit") return false;
+        return (this.cof(ord) == '[]') ? true : false;
+    }
+
+    static f(alpha, beta) {
+        let n = 0;
+
+        while (true) {
+            const x = this.fs(beta, n);
+
+            if (this.cmp(x, alpha) > 0) {
+                return x;
+            }
+
+            n++;
+        }
+    }
+
+    static g(alpha, beta, s) {
+        while (true) {
+            if (this.isSuccessor(beta)) return alpha;
+
+            const split = this.f(alpha, beta);
+
+            if (s === "") return split;
+
+            const bit = s[0];
+            s = s.slice(1);
+
+            if (bit === "0") {
+                beta = split;
+            } else {
+                alpha = split;
+            }
+        }
+    }
+
+    static gInv(alpha, beta, target) {
+        let result = "";
+
+        while (!this.isSuccessor(beta)) {
+            const split = this.f(alpha, beta);
+            const c = this.cmp(target, split);
+
+            if (c === 0) break;
+
+            if (c < 0) {
+                result += "0";
+                beta = split;
+            } else {
+                result += "1";
+                alpha = split;
+            }
+        }
+
+        return result;
+    }
+
+    static h(x, k = 0.5, maxlen = 100, eps = 1e-10) {
+        let result = "";
+
+        while (Math.abs(x - k) > eps && result.length < maxlen) {
+            if (x < k) {
+                result += "0";
+                x = x / k;
+            } else {
+                result += "1";
+                x = (x - k) / (1 - k);
+            }
+        }
+
+        return result;
+    }
+
+    static hInv(s, k = 0.5) {
+        let x = k;
+
+        for (let i = s.length - 1; i >= 0; i--) {
+            if (s[i] === "0") {
+                x = k * x;
+            } else {
+                x = k + (1 - k) * x;
+            }
+        }
+
+        return x;
+    }
+}
+
+class BMS {
+
+    static cmp(m1, m2) {
+        function sequence_compare(seq1, seq2) {
+            if (seq1.length === 0) {
+                if (seq2.length === 0) return 0;
+                else return -1;
+            } else {
+                if (seq2.length === 0) return 1;
+                else {
+                    if (seq1[0] < seq2[0]) return -1;
+                    else if (seq1[0] > seq2[0]) return 1;
+                    else return sequence_compare(seq1.slice(1), seq2.slice(1));
+                }
+            }
+        }
+
+        if (m1 === "Limit" && m2 === "Limit") return 0;
+        if (m1 === "Limit") return 1;
+        if (m2 === "Limit") return -1;
+
+        if (m1.length === 0) return m2.length === 0 ? 0 : -1;
+        if (m2.length === 0) return 1;
+
+        let col1 = m1[0];
+        let col2 = m2[0];
+
+        const diff = col1.length - col2.length;
+
+        if (diff > 0) {
+            col2 = col2.concat(Array(diff).fill(0));
+        } else if (diff < 0) {
+            col1 = col1.concat(Array(-diff).fill(0));
+        }
+
+        const c = sequence_compare(col1, col2);
+
+        return c || this.cmp(m1.slice(1), m2.slice(1));
+    }
+
+    static isSuccessor(matrix) {
+        return matrix !== "Limit" && (matrix.length === 0 || !matrix.at(-1)?.some(x => x !== 0));
+    }
+
+    static fs(m, FSterm) {
+        if (m === "Limit") {
+            if (FSterm === 0) return [[0]];
+            return [
+                Array(FSterm).fill(0),
+                Array(FSterm).fill(1)
+            ];
+        }
+
+        if (m.length === 0) {
+            return [];
+        }
+
+        const parent_cache = Object.create(null);
+        const ascending_cache = Object.create(null);
+
+        function parent(x, y) {
+            const key = `${x},${y}`;
+
+            if (key in parent_cache) {
+                return parent_cache[key];
+            }
+
+            let p = x;
+
+            while ((p = y ? parent(p, y - 1) : p - 1) >= 0) {
+                if (m[p][y] < m[x][y]) break;
+            }
+
+            return parent_cache[key] = p;
+        }
+
+        function ascending(r, x, y) {
+            const key = `${r},${x},${y}`;
+
+            if (key in ascending_cache) {
+                return ascending_cache[key];
+            }
+
+            return ascending_cache[key] =
+                r <= x &&
+                (r === x || ascending(r, parent(x, y), y));
+        }
+
+        const endcol = m.length - 1;
+        let result = m.slice(0, endcol);
+
+        const child = m[endcol];
+        const ymax = child.length - 1;
+
+        let LNZ;
+
+        for (LNZ = ymax; LNZ >= 0; --LNZ) {
+            if (child[LNZ] > 0) break;
+        }
+
+        if (LNZ < 0) {
+            return result;
+        }
+
+        const BR = parent(endcol, LNZ);
+        const BRcolumn = m[BR];
+
+        const offset = child.map((v, y) =>
+            y < LNZ ? v - BRcolumn[y] : 0
+        );
+
+        const offsetAsc = Array(endcol)
+            .fill(0, BR)
+            .map((_, x) =>
+                offset.map((v, y) =>
+                    ascending(BR, x, y) ? v : 0
+                )
+            );
+
+        for (let n = 1; n <= FSterm; n++) {
+            for (let col = BR; col < endcol; col++) {
+                result.push(
+                    m[col].map(
+                        (v, y) =>
+                            v + offsetAsc[col][y] * n
+                    )
+                );
+            }
+        }
+
+        if (
+            ymax > 0 &&
+            result.every(column => column[ymax] === 0)
+        ) {
+            result = result.map(column =>
+                column.slice(0, ymax)
+            );
+        }
+
+        return result;
+    }
+
+    static ZERO = [];
+
+    static f(alpha, beta) {
+        let n = 0;
+
+        while (true) {
+            const x = this.fs(beta, n);
+
+            if (this.cmp(x, alpha) > 0) {
+                return x;
+            }
+
+            n++;
+        }
+    }
+
+    static g(alpha, beta, s) {
+        while (true) {
+            if (this.isSuccessor(beta)) return alpha;
+
+            const split = this.f(alpha, beta);
+
+            if (s === "") return split;
+
+            const bit = s[0];
+            s = s.slice(1);
+
+            if (bit === "0") {
+                beta = split;
+            } else {
+                alpha = split;
+            }
+        }
+    }
+
+    static gInv(alpha, beta, target) {
+        let result = "";
+
+        while (!this.isSuccessor(beta)) {
+            const split = this.f(alpha, beta);
+            const c = this.cmp(target, split);
+
+            if (c === 0) break;
+
+            if (c < 0) {
+                result += "0";
+                beta = split;
+            } else {
+                result += "1";
+                alpha = split;
+            }
+        }
+
+        return result;
+    }
+
+    static h(x, k = 0.5 , maxlen = 100, eps = 1e-10) {
+        let result = "";
+
+        while (Math.abs(x - k) > eps && result.length < maxlen) {
+            if (x < k) {
+                result += "0";
+                x = x / k;
+            } else {
+                result += "1";
+                x = (x - k) / (1 - k);
+            }
+        }
+
+        return result;
+    }
+
+    static hInv(s, k = 0.5) {
+        let x = k;
+
+        for (let i = s.length - 1; i >= 0; i--) {
+            if (s[i] === "0") {
+                x = k * x;
+            } else {
+                x = k + (1 - k) * x;
+            }
+        }
+
+        return x;
+    }
+}
+
+
+let Lim_cOCF_in_BMS = [[0,0,0,0],[1,1,1,1],[2,2,0,0]] // Lim(cOCF) is (0,0,0,0)(1,1,1,1)(2,2) in BMS
+
+/*
+this is conversion is special : cOCF is symetrical to BMS except their bound ordinal
+
+to fix this, we divide the whole thing into 3 section
+ - sub epsilon
+ - sub buchholz
+ - sub TSS
+ - post TSS
+*/
+function Conv_cOCF(ord) {
+    if (cOCF.cmp(ord , '[[c]]')==-1)
+    return BMS.g(BMS.ZERO, [[0,0],[1,1]], cOCF.gInv(cOCF.ZERO, "[[c]]", ord))
+    
+    if (cOCF.cmp(ord , '[[[]c]]')==-1)
+    return BMS.g([[0,0],[1,1]], [[0,0,0],[1,1,1]], cOCF.gInv("[[c]]", "[[[]c]]", ord))
+
+    if (cOCF.cmp(ord , '[[[][c]c]]')==-1)
+    return BMS.g([[0,0,0],[1,1,1]], [[0,0,0,0],[1,1,1,1]], cOCF.gInv("[[[]c]]", "[[[][c]c]]", ord))
+
+    return BMS.g([[0,0,0,0],[1,1,1,1]], Lim_cOCF_in_BMS , cOCF.gInv("[[[][c]c]]", 'Limit', ord))
+}
+
+function Conv_BMS(ord) {
+    if (BMS.cmp(ord, [[0,0],[1,1]])==-1)
+    return cOCF.g(cOCF.ZERO, "[[c]]", BMS.gInv(BMS.ZERO,[[0,0],[1,1]] , ord))
+
+    if (BMS.cmp(ord, [[0,0,0],[1,1,1]])==-1)
+    return cOCF.g("[[c]]", "[[[]c]]", BMS.gInv([[0,0],[1,1]],[[0,0,0],[1,1,1]] , ord))
+
+    if (BMS.cmp(ord, [[0,0,0,0],[1,1,1,1]])==-1)
+    return cOCF.g("[[[]c]]", "[[[][c]c]]", BMS.gInv([[0,0,0],[1,1,1]],[[0,0,0,0],[1,1,1,1]] , ord))
+
+    return cOCF.g("[[[][c]c]]", "Limit", BMS.gInv([[0,0,0,0],[1,1,1,1]], Lim_cOCF_in_BMS , ord))
+}
+
+function cal(ord) {
+    return cOCF.convert(Conv_BMS(ord))
+}
