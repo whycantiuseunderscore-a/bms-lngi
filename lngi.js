@@ -139,7 +139,8 @@ function update() {
 }
 
 function smallUpdate(ss) {
-    document.getElementById("11").innerHTML = cal(lngi(ss)[0])
+    // (0,0,0)(1,1,1)(2,1,1) -> [[0,0,0],[
+    document.getElementById("11").innerHTML = cal(eval("[" + lngi(ss)[0].replaceAll(")(","],[").replaceAll("(","[").replaceAll(")","]") + "]"))
 }
 
 
