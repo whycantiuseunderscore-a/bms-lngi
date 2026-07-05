@@ -1,4 +1,4 @@
-
+//WHY
 
 if (null == localStorage.getItem("bms-font")) { document.getElementById("font").value = "system-ui" }
 else { document.getElementById("font").value = localStorage.getItem("bms-font") }
